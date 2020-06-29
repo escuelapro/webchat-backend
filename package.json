@@ -1,0 +1,43 @@
+{
+  "name": "webchat",
+  "version": "1.0.0",
+  "description": "Telegram Bot For Chat",
+  "author": "albertincx <albertincx@gmail.com>",
+  "main": "src/index.js",
+  "private": false,
+  "license": "MIT",
+  "engines": {
+    "node": "12.x",
+    "yarn": "*"
+  },
+  "scripts": {
+    "precommit": "yarn lint",
+    "start": "NODE_ENV=production node ./src/index.js",
+    "dev": "NODE_ENV=production nodemon ./src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:escuelapro/webchat-backend.git"
+  },
+  "keywords": [
+    "nodejs",
+    "es6",
+    "es7",
+    "es8",
+    "eslint"
+  ],
+  "dependencies": {
+    "cron": "^1.8.2",
+    "dotenv-safe": "^8.2.0",
+    "jsbn": "^1.1.0",
+    "mongoose": "^5.9.7",
+    "telegraf": "^3.37.0",
+    "uid-safe": "^2.1.5",
+    "ws": "^7.3.0"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-plugin-import": "^2.20.2"
+  }
+}
