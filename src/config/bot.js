@@ -112,7 +112,7 @@ class BotHelper {
     const str = text.match('-?[0-9]+');
     const strTg = text.match(' tg-?[0-9]+');
     if (str && str[0]) {
-      ID = +str[0];
+      ID = Number(str[0]);
       let par = 'g';
       if (strTg) {
         result.text = messages.startChat();
@@ -215,7 +215,7 @@ class BotHelper {
     if (guid && guid[1]) {
       chatId = guid[1];
     }
-    let key = +chatId;
+    let key = Number(chatId);
     try {
       if (key < 0) {
         key *= -1;
@@ -236,11 +236,8 @@ class BotHelper {
   }
 
   async startOrHelp({ reply, message, ...msg }) {
-    const opts = {
-      disable_web_page_preview: true,
-    };
+    const opts = { disable_web_page_preview: true };
     let rplText = messages.startEmpty();
-    let isStartMessage = true;
     try {
       if (msg.update && msg.update.message) {
         const { text, mode } = await this.processUpdateMessage(
@@ -250,10 +247,8 @@ class BotHelper {
           if (mode) {
             opts.parse_mode = mode;
           }
-          isStartMessage = false;
         } else {
           if (msg.update.message.chat.id < 0) {
-            isStartMessage = false;
             rplText = messages.start(username, msg.update.message.chat.id);
           }
         }

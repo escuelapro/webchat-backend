@@ -25,6 +25,7 @@ const clear = async (msg) => {
   if (!search) {
     return Promise.resolve('empty');
   }
+  // eslint-disable-next-line no-useless-escape
   const s = new RegExp(`^https?:\/\/${search}`);
   const d = await links.deleteMany({ url: s });
   return JSON.stringify(d);

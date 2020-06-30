@@ -14,7 +14,9 @@ function cron(crontime, tasks, botHelper) {
     for (let i = 0; i < tasks.length; i += 1) {
       const taskName = tasks[i];
       try {
+        // eslint-disable-next-line import/no-dynamic-require
         const microtasks = require(`./service/commands/${taskName}`);
+        // eslint-disable-next-line no-await-in-loop
         await microtasks.run({ cronJob: crontime }, botHelper);
       } catch (e) {
         if (process.env.DEV) {
