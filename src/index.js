@@ -1,4 +1,4 @@
-const Telegraf = require('telegraf');
+const { Telegraf } = require('telegraf');
 
 const { TBTKN } = require('./config/vars');
 const mongoose = require('./config/mongoose');
