@@ -1,4 +1,5 @@
 const WebSocket = require('ws');
+const fs = require('fs');
 const uid = require('uid-safe').sync;
 
 const { putChat, getLast } = require('./api/utils/db');
@@ -20,11 +21,18 @@ const ws = (botHelper) => {
         messageObj.uid = uid1;
 
         if (messageObj.g) {
-          let key = `${messageObj.g}_chat_${messageObj.uid}`;
+          const key = `${messageObj.g}_chat_${messageObj.uid}`;
           if (messageObj.service === 'lastmes') {
-            let lastMess = await getLast(key, messageObj.uid);
+            let result = [];
+            try {
+              const lastMess = await getLast(key, messageObj.uid);
+              if (lastMess) result = lastMess;
+            } catch (e) {
+              console.log(e);
+            }
             const service = { service: 'lastmes', message: messageObj.uid };
-            service.lastMess = lastMess;
+            service.lastMess = result;
+
             ws.send(JSON.stringify(service));
             return;
           }
@@ -41,14 +49,27 @@ const ws = (botHelper) => {
               delete sockets.g[key];
             });
           }
+          const CHAT_ID = +messageObj.g * -1;
+
+          if (messageObj.img) {
+            const filePath = `./${new Date().getTime()}`;
+            const base64Data = messageObj.img.replace(/^data:([A-Za-z-+/]+);base64,/, '');
+
+            fs.writeFile(filePath, base64Data, 'base64', () => {
+              botHelper.sendPhot(CHAT_ID, { source: fs.readFileSync(filePath) }, 'test').then(()=>{
+                fs.unlinkSync(filePath);
+              });
+            });
+            return;
+          }
           if (!messageObj.login) {
             await putChat(messageObj, key).catch(() => {});
-            botHelper.botMes(+messageObj.g * -1, `
+            botHelper.botMes(CHAT_ID, `
           #u${messageObj.uid}:\n${messageObj.message}`, messageObj.g, false);
           }
         }
       } catch (e) {
-        botHelper.sendAdmin(e);
+        botHelper.sendAdmin({ text: `${e}` });
       }
     });
   });

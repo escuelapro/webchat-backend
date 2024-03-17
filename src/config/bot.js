@@ -50,11 +50,7 @@ class BotHelper {
     return chatId === TGADMIN;
   }
 
-  botMes(chatId, text, key, mark = false) {
-    let opts = {};
-    if (mark) {
-      opts = { parse_mode: 'Markdown' };
-    }
+  getKey(key) {
     let kkey = '';
     if (key) {
       key = +key;
@@ -63,9 +59,25 @@ class BotHelper {
       }
       kkey = `#group-${key}:`;
     }
+    return kkey;
+  }
+
+  sendPhot(chatId, fileObj, text, key) {
+    return this.tgbot.sendPhoto(chatId, fileObj, {caption: text}).
+    catch(() => {
+      return this.sendAdmin({text: `${this.getKey(key)} ${text}`, fileObj});
+    });
+  }
+
+  botMes(chatId, text, key, mark = false) {
+    let opts = {};
+    if (mark) {
+      opts = { parse_mode: 'Markdown' };
+    }
+
     return this.tgbot.sendMessage(chatId, text, opts).
       catch(() => {
-        this.sendAdmin(`${kkey} ${text}`, process.env.TGGROUP);
+        this.sendAdmin({text: `${this.getKey(key)} ${text}`});
       });
   }
 
@@ -85,7 +97,7 @@ class BotHelper {
     }
   }
 
-  sendAdmin(text, chatId = TGADMIN, mark = false) {
+  sendAdmin({ text, fileObj }, chatId = TGADMIN, mark = false) {
     let opts = {};
     if (mark) {
       opts = {
@@ -99,6 +111,10 @@ class BotHelper {
     if (chatId === TGADMIN) {
       text = `service: ${text}`;
     }
+    if (fileObj) {
+      return this.tgbot.sendPhoto(chatId, fileObj, {caption: text}).catch(() => {});
+    }
+
     return this.tgbot.sendMessage(chatId, text, opts);
   }
 

@@ -7,13 +7,13 @@
   "private": false,
   "license": "MIT",
   "engines": {
-    "node": "12.x",
+    "node": "16.x",
     "yarn": "*"
   },
   "scripts": {
     "precommit": "yarn lint",
     "start": "NODE_ENV=production node ./src/index.js",
-    "dev": "NODE_ENV=production nodemon ./src/index.js"
+    "dev": "DEV=1 PORT=1234 NODE_ENV=production nodemon ./src/index.js"
   },
   "repository": {
     "type": "git",
@@ -31,6 +31,7 @@
     "dotenv-safe": "^8.2.0",
     "jsbn": "^1.1.0",
     "mongoose": "^5.9.7",
+    "nodemon": "^3.1.0",
     "telegraf": "^3.37.0",
     "uid-safe": "^2.1.5",
     "ws": "^7.3.0"
