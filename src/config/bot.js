@@ -65,7 +65,7 @@ class BotHelper {
   sendPhot(chatId, fileObj, text, key) {
     return this.tgbot.sendPhoto(chatId, fileObj, {caption: text}).
     catch(() => {
-      return this.sendAdmin({text: `${this.getKey(key)} ${text}`, fileObj});
+      return this.sendAdmin({text: text, fileObj});
     });
   }
 
@@ -77,7 +77,7 @@ class BotHelper {
 
     return this.tgbot.sendMessage(chatId, text, opts).
       catch(() => {
-        this.sendAdmin({text: `${this.getKey(key)} ${text}`});
+        this.sendAdmin({text: text});
       });
   }
 
@@ -108,9 +108,9 @@ class BotHelper {
     if (chatId === null) {
       chatId = TGADMIN;
     }
-    if (chatId === TGADMIN) {
-      text = `service: ${text}`;
-    }
+    // if (chatId === TGADMIN) {
+    //   text = `service: ${text}`;
+    // }
     if (fileObj) {
       return this.tgbot.sendPhoto(chatId, fileObj, {caption: text}).catch(() => {});
     }

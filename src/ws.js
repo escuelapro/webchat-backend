@@ -56,10 +56,13 @@ const ws = (botHelper) => {
             const base64Data = messageObj.img.replace(/^data:([A-Za-z-+/]+);base64,/, '');
 
             fs.writeFile(filePath, base64Data, 'base64', () => {
-              botHelper.sendPhot(CHAT_ID, { source: fs.readFileSync(filePath) }, 'test').then(()=>{
+              const caption =  `#u${messageObj.uid}:\nScreen shot` 
+
+              botHelper.sendPhot(CHAT_ID, { source: fs.readFileSync(filePath) }, caption).then(()=>{
                 fs.unlinkSync(filePath);
               });
             });
+
             return;
           }
           if (!messageObj.login) {
