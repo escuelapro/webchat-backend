@@ -1,4 +1,3 @@
-const Extra = require('telegraf/extra');
 const Markup = require('telegraf/markup');
 
 const messages = require('../../../messages/format');
@@ -10,7 +9,7 @@ function start() {
   const replyMarkup = Markup.keyboard([
     [buttons.help.label],
   ]);
-  return Extra.markup(replyMarkup);
+  return replyMarkup;
 }
 
 module.exports = botHelper => {
