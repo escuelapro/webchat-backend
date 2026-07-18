@@ -42,7 +42,16 @@ module.exports = botHelper => {
       }
     }
   };
+  const onEditedMessage = async ({ edited_message: msg }) => {
+    if (!msg) return;
+    const { reply_to_message: rpl, chat: { id: chatId }, text } = msg;
+    if (rpl && rpl.text && text) {
+      await botHelper.sockSendEdited(chatId, text, rpl.text);
+    }
+  };
+
   botHelper.bot.hears(/.*/, (ctx) => onMessage(ctx));
   botHelper.bot.on('message',
     ({ update, reply }) => onMessage({ ...update, reply }));
+  botHelper.bot.on('edited_message', ({ update }) => onEditedMessage(update));
 };

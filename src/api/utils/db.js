@@ -34,6 +34,12 @@ const clear = async (msg) => {
 const getLast = (key, uid) => links.find({ key, uid }).sort(
   { createdAt: -1 }).limit(20);
 
+const updateLastAdminMessage = async (key, uid, message) => {
+  const last = await links.findOne({ key, uid, sender: 'admin' }).sort({ createdAt: -1 });
+  if (!last) return null;
+  return links.updateOne({ _id: last._id }, { $set: { message } });
+};
+
 const updateOne = async (item) => {
   const { url } = item;
   item.$inc = { affects: 1 };
@@ -70,6 +76,7 @@ module.exports.stat = stat;
 module.exports.clear = clear;
 module.exports.updateOne = updateOne;
 module.exports.getLast = getLast;
+module.exports.updateLastAdminMessage = updateLastAdminMessage;
 module.exports.putChat = putChat;
 module.exports.putUidUser = putUidUser;
 module.exports.getUidUser = getUidUser;
