@@ -1,6 +1,6 @@
 # WebChat Backend
 
-Backend для Telegram бота с WebSocket поддержкой.
+Backend для Telegram-бота с поддержкой WebSocket.
 
 ## Быстрый старт
 
@@ -21,33 +21,72 @@ cp .env.example .env
 npm run dev
 ```
 
-### Production развертывание
+По умолчанию в dev используется порт из скрипта (`PORT=1234`). Для проверки: `wscat -c ws://localhost:1234`.
 
-#### 1. Подключение к серверу
+## Развёртывание в production (Яндекс Облако)
+
+Инструкция рассчитана на виртуальную машину Ubuntu в Yandex Cloud.
+
+### 0. Подготовка в консоли Яндекс Облака
+
+1. Создайте VM (Ubuntu 22.04) с публичным IP.
+2. В Security Group откройте входящие порты: `22` (SSH), `80` (HTTP), `443` (HTTPS).
+3. Создайте A-запись DNS: `chat.escuela.pro` → публичный IP VM.
+4. Дождитесь распространения DNS (нужно **до** выпуска SSL).
+
+### 1. Подключение к серверу
 
 ```bash
 ssh yc-user@YOUR_SERVER_IP
 ```
 
-#### 2. Установка Node.js 18+
+### 2. Установка Node.js 18
+
+В `package.json` указан engine `16.x`, на практике используется Node.js 18.
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt install -y nodejs
-node -v  # Проверить версию
+node -v  # ожидается v18.x
 ```
 
-#### 3. Клонирование и установка
+### 3. Клонирование и установка
 
 ```bash
 git clone https://github.com/escuelapro/webchat-backend.git
 cd webchat-backend
 npm install
 cp .env.example .env
-nano .env  # Настроить переменные окружения
+nano .env  # настроить переменные окружения
 ```
 
-#### 4. Запуск через PM2
+В `.env` для production задайте как минимум:
+
+| Переменная | Назначение |
+|---|---|
+| `TBTKN` | токен Telegram-бота (**обязательно**) |
+| `PORT` | порт Node/WebSocket (по умолчанию `4000`) |
+| `MONGO_URI` | строка подключения MongoDB |
+| `TGADMIN` | Telegram user ID админа |
+| `TGGROUP` | ID группы для логов |
+| `APP_FRONTNAME` | домен фронтенда виджета |
+| `TBTUSERNAME` | username бота |
+
+`PORT` в `.env` должен совпадать с портом в `proxy_pass` Nginx (ниже — `4000`).
+
+### 4. Firewall на VM (если включён ufw)
+
+```bash
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable
+sudo ufw status
+```
+
+Порты Node (`4000`) наружу открывать не нужно — доступ идёт через Nginx.
+
+### 5. Запуск через PM2
 
 ```bash
 # Установка PM2
@@ -64,7 +103,7 @@ pm2 save
 pm2 logs webchat
 ```
 
-#### 5. Настройка Nginx для WebSocket
+### 6. Настройка Nginx для WebSocket
 
 ```bash
 # Установка Nginx
@@ -74,7 +113,7 @@ sudo apt install nginx -y
 sudo nano /etc/nginx/sites-available/webchat
 ```
 
-Вставить конфигурацию:
+Вставить конфигурацию (порт `4000` = значение `PORT` в `.env`):
 
 ```nginx
 server {
@@ -99,7 +138,15 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-#### 6. SSL сертификат (Let's Encrypt)
+Проверьте, что домен уже указывает на сервер:
+
+```bash
+curl -I http://chat.escuela.pro
+```
+
+### 7. SSL-сертификат (Let's Encrypt)
+
+DNS A-запись должна уже указывать на этот сервер, иначе certbot не выпустит сертификат.
 
 ```bash
 sudo apt install certbot python3-certbot-nginx -y
@@ -107,11 +154,12 @@ sudo certbot --nginx -d chat.escuela.pro
 # Выбрать опцию 2 (Redirect HTTP to HTTPS)
 ```
 
-После установки WebSocket будет доступен по `wss://chat.escuela.pro`
+После установки WebSocket доступен по `wss://chat.escuela.pro`.
 
-#### 7. Обновление проекта
+### 8. Обновление проекта
 
 ```bash
+cd ~/webchat-backend   # или путь, куда клонировали репозиторий
 git pull
 npm install
 pm2 restart webchat
@@ -119,9 +167,11 @@ pm2 restart webchat
 
 ## Проверка работы
 
-- Локально: `wscat -c ws://localhost:4000`
+- Локально (dev): `wscat -c ws://localhost:1234`
+- На сервере (порт из `.env`): `wscat -c ws://localhost:4000`
 - Через домен: `wscat -c wss://chat.escuela.pro`
-- Проверка порта: `sudo lsof -i -P -n | grep node`
+- Процесс Node: `sudo lsof -i -P -n | grep node`
+- PM2: `pm2 status` / `pm2 logs webchat`
 
 ## Структура проекта
 
@@ -138,4 +188,5 @@ webchat-backend/
 
 ## Переменные окружения
 
-Создайте файл `.env` на основе `.env.example` и настройте необходимые переменные.
+Создайте файл `.env` на основе `.env.example` и настройте необходимые переменные (см. таблицу в шаге 3).
+Без `TBTKN` приложение не стартует; без `MONGO_URI` история сообщений недоступна, остальное работает.
