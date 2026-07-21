@@ -1,6 +1,6 @@
 const uid = require('uid-safe').sync;
 
-const { putChat, putUidUser, getUidUser } = require('../api/utils/db');
+const { putChat, putUidUser, getUidUser, updateLastAdminMessage } = require('../api/utils/db');
 const messages = require('../messages/format');
 
 const TGADMIN = parseInt(process.env.TGADMIN);
@@ -246,6 +246,33 @@ class BotHelper {
       }
       await putChat({ message: txt, sender: 'admin', uid }, key).catch(
         () => {});
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  // Only the live widget (#u<uid>: forwarded via sockets.g, same as sockSend's
+  // mainstream branch) supports in-place edits; the #tgu/#tgchat/#group
+  // legacy local-socket paths aren't wired to a widget session to push into.
+  async sockSendEdited(chatId, txt, rplText) {
+    if (!rplText) return;
+    let uid = rplText.match(/#u(.*?):/);
+    if (uid && uid[1]) {
+      uid = uid[1];
+    }
+    let guid = rplText.match(/#group(.*?):/);
+    if (guid && guid[1]) {
+      chatId = guid[1];
+    }
+    let key = Number(chatId);
+    if (key >= 0) return;
+    key *= -1;
+    key = `${key}_chat_${uid}`;
+    try {
+      if (this.sockets.g[key]) {
+        this.sockets.g[key].ws.send(JSON.stringify({ service: 'edited', message: txt }));
+      }
+      await updateLastAdminMessage(key, uid, txt).catch(() => {});
     } catch (e) {
       console.log(e);
     }
