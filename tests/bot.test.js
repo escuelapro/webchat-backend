@@ -142,4 +142,66 @@ describe('src/config/bot', () => {
     }));
     expect(mockUpdateLastAdminMessage).toHaveBeenCalledWith('123_chat_user-1', 'user-1', 'edited text');
   });
+
+  it('removes stale local chat mappings in clearUnusedChats', () => {
+    const { helper } = createHelper();
+    const oldDate = new Date(Date.now() - (10 * 60 * 1000));
+
+    helper.socketsLocal['-100_uid-1'] = {
+      createdAt: oldDate,
+      userId: 15,
+      chatId: -100,
+    };
+    helper.socketsLocalUid['-100_15'] = 'uid-1';
+
+    helper.clearUnusedChats();
+
+    expect(helper.socketsLocal['-100_uid-1']).toBeUndefined();
+    expect(helper.socketsLocalUid['-100_15']).toBeUndefined();
+  });
+
+  it('uses processUpdateMessage result in startOrHelp replies', async () => {
+    const { helper } = createHelper();
+    helper.processUpdateMessage = jest.fn().mockResolvedValue({
+      text: 'custom text',
+      mode: 'Markdown',
+    });
+    const reply = jest.fn().mockResolvedValue(true);
+
+    await helper.startOrHelp({
+      reply,
+      update: {
+        message: {
+          chat: { id: 1 },
+          text: '/start 1',
+        },
+      },
+    });
+
+    expect(reply).toHaveBeenCalledWith('custom text', {
+      disable_web_page_preview: true,
+      parse_mode: 'Markdown',
+    });
+  });
+
+  it('falls back to group start instructions in startOrHelp', async () => {
+    const { helper } = createHelper();
+    helper.processUpdateMessage = jest.fn().mockResolvedValue({});
+    const reply = jest.fn().mockResolvedValue(true);
+
+    await helper.startOrHelp({
+      reply,
+      update: {
+        message: {
+          chat: { id: -123 },
+          text: '/start',
+        },
+      },
+    });
+
+    expect(reply).toHaveBeenCalledWith(
+      '1. First promote me to admin\n2. Set the domain name by https://t.me/support_bot?start=-123',
+      { disable_web_page_preview: true },
+    );
+  });
 });
