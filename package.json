@@ -12,8 +12,27 @@
   },
   "scripts": {
     "precommit": "yarn lint",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
     "start": "NODE_ENV=production node ./src/index.js",
     "dev": "DEV=1 PORT=1234 NODE_ENV=production nodemon ./src/index.js"
+  },
+  "jest": {
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/index.js",
+      "!src/service/commands/test.js"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageProvider": "babel",
+    "coverageReporters": [
+      "text-summary",
+      "lcov",
+      "html"
+    ]
   },
   "repository": {
     "type": "git",
@@ -39,6 +58,7 @@
   "devDependencies": {
     "eslint": "^8.57.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.29.1"
+    "eslint-plugin-import": "^2.29.1",
+    "jest": "^30.4.2"
   }
 }
