@@ -1,4 +1,8 @@
 const mongoose = require('mongoose');
+const { mongo } = require('../../config/vars');
+
+// Без MONGO_URI запросы висят 10 с в буфере mongoose и падают — не обращаемся к БД.
+const noDb = () => !mongo.uri;
 
 const Any = mongoose.model('Any', new mongoose.Schema({}, {
   timestamps: true,
@@ -31,10 +35,13 @@ const clear = async (msg) => {
   return JSON.stringify(d);
 };
 
-const getLast = (key, uid) => links.find({ key, uid }).sort(
-  { createdAt: -1 }).limit(20);
+const getLast = async (key, uid) => {
+  if (noDb()) return [];
+  return links.find({ key, uid }).sort({ createdAt: -1 }).limit(20);
+};
 
 const updateLastAdminMessage = async (key, uid, message) => {
+  if (noDb()) return null;
   const last = await links.findOne({ key, uid, sender: 'admin' }).sort({ createdAt: -1 });
   if (!last) return null;
   return links.updateOne({ _id: last._id }, { $set: { message } });
@@ -47,6 +54,7 @@ const updateOne = async (item) => {
 };
 
 const putChat = async ({ g, u, pathname, host, ...item }, key) => {
+  if (noDb()) return null;
   return links.bulkWrite([
     {
       insertOne: {
@@ -57,12 +65,14 @@ const putChat = async ({ g, u, pathname, host, ...item }, key) => {
 };
 
 const getUidUser = async (g, key) => {
+  if (noDb()) return null;
   g = `${g}`;
   const last = await uids.findOne({ key, g });
   return last ? last.toObject() : null;
 };
 
 const putUidUser = async ({ g, u, ...item }, key) => {
+  if (noDb()) return null;
   return uids.bulkWrite([
     {
       updateOne: {

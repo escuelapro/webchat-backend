@@ -108,6 +108,10 @@ class BotHelper {
     if (chatId === null) {
       chatId = TGADMIN;
     }
+    if (!chatId) {
+      console.error('sendAdmin skipped (TGADMIN not set):', text);
+      return Promise.resolve();
+    }
     // if (chatId === TGADMIN) {
     //   text = `service: ${text}`;
     // }
@@ -115,7 +119,9 @@ class BotHelper {
       return this.tgbot.sendPhoto(chatId, fileObj, {caption: text}).catch(() => {});
     }
 
-    return this.tgbot.sendMessage(chatId, text, opts);
+    return this.tgbot.sendMessage(chatId, text, opts).catch((e) => {
+      console.error('sendAdmin failed:', e.message);
+    });
   }
 
   disDb() {

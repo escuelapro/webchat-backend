@@ -1,3 +1,5 @@
+process.env.MONGO_URI = 'mongodb://test';
+
 describe('src/api/utils/db', () => {
   const OLD_ENV = process.env;
 
