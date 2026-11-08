@@ -19,5 +19,6 @@ module.exports = (botHelper, conn) => {
   });
 
   format(botHelper);
-  botHelper.bot.launch();
+  // В Cloud Run бот работает через вебхук (см. index.js), long polling — только локально.
+  if (!process.env.WEBHOOK_DOMAIN) botHelper.bot.launch();
 };

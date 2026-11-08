@@ -16,6 +16,7 @@ module.exports = {
   env: process.env.NODE_ENV,
   PORT: process.env.PORT || 4000,
   TBTKN: process.env.TBTKN || '',
+  WEBHOOK_DOMAIN: process.env.WEBHOOK_DOMAIN || '',
   mongo: {
     uri: process.env.MONGO_URI,
   },

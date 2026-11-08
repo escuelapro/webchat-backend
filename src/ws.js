@@ -6,9 +6,9 @@ const { putChat, getLast } = require('./api/utils/db');
 const { PORT } = require('./config/vars');
 
 const sockets = { g: {}, u: {} };
-const ws = (botHelper) => {
+const ws = (botHelper, server) => {
   botHelper.setSockets(sockets);
-  const wss = new WebSocket.Server({ port: PORT });
+  const wss = new WebSocket.Server(server ? { server } : { port: PORT });
   wss.on('connection', ws => {
     ws.on('message', async message => {
       let messageObj = {};

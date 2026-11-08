@@ -18,13 +18,16 @@ if gcloud secrets describe "webchat-${ENV_NAME}-mongo-uri" --project "$PROJECT" 
   SECRETS="${SECRETS},MONGO_URI=webchat-${ENV_NAME}-mongo-uri:latest"
 fi
 
-# Бот работает через long polling: ровно один инстанс, CPU всегда включён.
+# Бот работает через вебхук, CPU тарифицируется только во время запросов.
+# Ровно один инстанс: сокеты и привязки чатов хранятся в памяти (без Mongo).
+WEBHOOK_DOMAIN=$(gcloud run services describe "$SERVICE" --project "$PROJECT" --region "$REGION" --format='value(status.url)' 2>/dev/null | sed 's#https://##')
+[ -n "$WEBHOOK_DOMAIN" ] && ENV_VARS="${ENV_VARS}@WEBHOOK_DOMAIN=${WEBHOOK_DOMAIN}"
 gcloud run deploy "$SERVICE" \
   --project "$PROJECT" --region "$REGION" \
   --source . \
   --allow-unauthenticated \
   --min-instances 1 --max-instances 1 \
-  --no-cpu-throttling \
+  --cpu-throttling \
   --cpu 1 --memory 512Mi \
   --timeout 3600 \
   --set-env-vars "^@^${ENV_VARS}" \

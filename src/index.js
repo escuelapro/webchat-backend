@@ -1,5 +1,7 @@
+const http = require('http');
+const crypto = require('crypto');
 const { Telegraf } = require('telegraf')
-const { TBTKN, PORT } = require('./config/vars');
+const { TBTKN, PORT, WEBHOOK_DOMAIN } = require('./config/vars');
 const mongoose = require('./config/mongoose');
 const botroute = require('./api/routes/botroute');
 const BotHelper = require('./config/bot');
@@ -31,7 +33,24 @@ try {
       if (botInstance) {
         const botHelper = new BotHelper(botInstance);
         botroute(botHelper, conn);
-        ws(botHelper);
+        let server;
+        if (WEBHOOK_DOMAIN) {
+          botInstance.catch((e) => console.error('Bot handler error:', e));
+          // Вебхук вместо long polling: Telegram сам присылает POST, и Cloud Run
+          // может не держать CPU включённым между запросами.
+          const hookPath = '/tg-webhook';
+          const secretToken = crypto.createHash('sha256').update(TBTKN).digest('hex').slice(0, 32);
+          const webhookCb = botInstance.webhookCallback(hookPath, { secretToken });
+          server = http.createServer((req, res) => webhookCb(req, res, () => {
+            res.statusCode = 404;
+            res.end();
+          }));
+          server.listen(PORT);
+          botInstance.telegram.setWebhook(`https://${WEBHOOK_DOMAIN}${hookPath}`, { secret_token: secretToken })
+            .then(() => console.log(`Webhook set: ${WEBHOOK_DOMAIN}${hookPath}`))
+            .catch((e) => console.error('setWebhook failed:', e));
+        }
+        ws(botHelper, server);
         init(botHelper);
         console.log('Application started successfully');
       }
